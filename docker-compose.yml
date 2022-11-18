@@ -1,0 +1,104 @@
+version: "3.8"
+# https://unrealcontainers.com/docs/use-cases/pixel-streaming
+services:
+  # The Cirrus signalling server
+  signalling-web-server:
+    domainname: pixelstreaming
+    image: "ghcr.io/dev3axis/signallingwebserver:5.1"
+    network_mode: "host"
+    build:
+      context: ./SignallingWebServer
+      dockerfile: Dockerfile
+    command:
+      - "cirrus.js"
+      - "--useMatchmaker=true"
+    depends_on:
+      - matchmaker
+    deploy:
+      resources:
+        reservations:
+          cpus: "1"
+          memory: 512M
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  selective-forwarding-unit:
+    domainname: pixelstreaming
+    image: "ghcr.io/dev3axis/sfu:5.1"
+    network_mode: "host"
+    build:
+      context: ./SFU
+      dockerfile: Dockerfile
+    command:
+      - "sfu_server.js"
+    depends_on:
+      - signalling-web-server
+    deploy:
+      resources:
+        reservations:
+          cpus: "1"
+          memory: 512M
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  matchmaker:
+    domainname: pixelstreaming
+    image: "ghcr.io/dev3axis/matchmaker:5.1"
+    network_mode: "host"
+    build:
+      context: ./Matchmaker
+      dockerfile: Dockerfile
+    command:
+      - "matchmaker.js"
+    deploy:
+      resources:
+        reservations:
+          cpus: "1"
+          memory: 512M
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  game-server:
+    domainname: pixelstreaming
+    image: ghcr.io/dev3axis/ecom:1.1.31.3-UE51
+    entrypoint:
+      [
+        "/opt/project/Ecom_demo_mobile.sh",
+        "-RenderOffscreen",
+        "-AllowPixelStreamingCommands",
+        "-noaudio",
+        "-Windowed",
+        "-ForceRes",
+        "-ResX=1920",
+        "-ResY=1080",
+        "-PixelStreamingIP=127.0.0.1",
+        "-PixelStreamingPort=8888",
+      ]
+    network_mode: "host"
+    volumes:
+      - /mnt/logdata:/opt/project/Ecom_demo_mobile/Saved/Logs
+    environment:
+      - PROJECT_NAME=Ecom_demo_mobile
+    depends_on:
+      - signalling-web-server
+    deploy:
+      # replicas: 1
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+        max_attempts: 3
+        window: "30s"
+      resources:
+        reservations:
+          memory: 4Gb
+          cpus: "2"
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 8Gb
+          cpus: "4"
