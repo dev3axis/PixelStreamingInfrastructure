@@ -23,3 +23,5 @@ EXPOSE 8889
 
 # Expose TCP port 9999 for connections from the Matchmaker
 EXPOSE 9999
+
+LABEL org.opencontainers.image.source = "https://github.com/dev3axis/PixelStreamingInfrastructure"

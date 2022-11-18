@@ -11,3 +11,5 @@ RUN npm install .
 FROM gcr.io/distroless/nodejs
 COPY --from=BUILDER /opt/build /opt/SFU
 WORKDIR /opt/SFU
+
+LABEL org.opencontainers.image.source = "https://github.com/dev3axis/PixelStreamingInfrastructure"

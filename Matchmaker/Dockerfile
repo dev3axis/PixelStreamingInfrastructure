@@ -15,3 +15,5 @@ WORKDIR /opt/matchmaker
 
 EXPOSE 90
 EXPOSE 9999
+
+LABEL org.opencontainers.image.source = "https://github.com/dev3axis/PixelStreamingInfrastructure"
