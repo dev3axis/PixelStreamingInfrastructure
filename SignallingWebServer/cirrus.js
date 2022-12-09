@@ -255,6 +255,9 @@ if(config.EnableWebserver) {
 		res.status(404).send('Unable to locate file ' + homepageFile);
 		return;
 	});
+
+	// Load balancer health check
+	app.get("/health", (req, res) => res.send("ok"));
 }
 
 //Setup http and https servers

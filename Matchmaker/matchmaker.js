@@ -162,6 +162,9 @@ if(enableRedirectionLinks) {
 			sendRetryResponse(res);
 		}
 	});
+	
+	// Load balancer health check
+	app.get("/health", (req, res) => res.send("ok"));
 }
 
 //
