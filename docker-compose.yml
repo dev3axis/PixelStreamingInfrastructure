@@ -63,7 +63,7 @@ services:
 
   game-server:
     domainname: pixelstreaming
-    image: ghcr.io/dev3axis/ecom:1.1.31.3-UE51
+    image: ghcr.io/dev3axis/ecom:1.1.31.12-UE51
     entrypoint:
       [
         "/opt/project/Ecom_demo_mobile.sh",
