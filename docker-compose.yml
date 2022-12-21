@@ -12,8 +12,11 @@ services:
     command:
       - "cirrus.js"
       - "--useMatchmaker=true"
+      - "--HttpPort=8080"
     depends_on:
-      - matchmaker
+      - game-server
+      - selective-forwarding-unit
+      - nginx
     deploy:
       resources:
         reservations:
@@ -32,8 +35,6 @@ services:
       dockerfile: Dockerfile
     command:
       - "sfu_server.js"
-    depends_on:
-      - signalling-web-server
     deploy:
       resources:
         reservations:
@@ -52,6 +53,8 @@ services:
       dockerfile: Dockerfile
     command:
       - "matchmaker.js"
+    depends_on:
+      - signalling-web-server
     deploy:
       resources:
         reservations:
@@ -82,8 +85,6 @@ services:
       - /mnt/logdata:/opt/project/Ecom_demo_mobile/Saved/Logs
     environment:
       - PROJECT_NAME=Ecom_demo_mobile
-    depends_on:
-      - signalling-web-server
     deploy:
       # replicas: 1
       restart_policy:
@@ -102,3 +103,31 @@ services:
         limits:
           memory: 8Gb
           cpus: "4"
+
+  nginx:
+    container_name: "nginx-service"
+    build:
+      context: ./Proxy
+      dockerfile: nginx.Dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./config:/config
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /tmp/acme_challenge:/tmp/acme_challenge
+    depends_on:
+      - letsencrypt
+    restart: always
+    network_mode: "host"
+  letsencrypt:
+    container_name: "certbot-service"
+    image: certbot/certbot:latest
+    command: sh -c "certbot certonly --webroot -w /tmp/acme_challenge -d 1.pixel.stream --text --agree-tos --email l@3ax.is --rsa-key-size 4096 --verbose --keep-until-expiring --preferred-challenges=http"
+    entrypoint: ""
+    network_mode: "host"
+    volumes:
+      - "/etc/letsencrypt:/etc/letsencrypt"
+      - "/tmp/acme_challenge:/tmp/acme_challenge"
+    environment:
+      - TERM=xterm
